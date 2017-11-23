@@ -1,4 +1,4 @@
-module Game exposing (Game, advance)
+module Game exposing (Game, Player(..), advance, movePaddle)
 
 import Math.Vector2 as V exposing (Vec2, vec2, getX, getY, setX, setY)
 import Time exposing (Time)
@@ -25,6 +25,11 @@ type alias Velocity =
 -}
 type alias Paddle =
     ( Float, Float )
+
+
+type Player
+    = One
+    | Two
 
 
 type alias Game =
@@ -186,3 +191,23 @@ move path game =
                     | position =
                         newPosition
                 }
+
+
+movePaddle : Player -> Float -> Game -> Game
+movePaddle player yDiff game =
+    case player of
+        One ->
+            { game
+                | player1 =
+                    Tuple.mapFirst
+                        (\y -> clamp 0 (getY game.board - second game.player1) (y + yDiff))
+                        game.player1
+            }
+
+        Two ->
+            { game
+                | player2 =
+                    Tuple.mapFirst
+                        (\y -> clamp 0 (getY game.board - second game.player2) (y + yDiff))
+                        game.player2
+            }

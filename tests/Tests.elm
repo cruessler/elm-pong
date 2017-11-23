@@ -2,7 +2,7 @@ module Tests exposing (..)
 
 import Expect exposing (Expectation, FloatingPointTolerance(..))
 import Fuzz exposing (Fuzzer, int, floatRange, list, string)
-import Game exposing (Game)
+import Game exposing (Game, Player(..))
 import Math.Vector2 as V exposing (Vec2, vec2, getX, getY)
 import Test exposing (..)
 import Time
@@ -209,6 +209,38 @@ game =
                         Expect.all
                             [ .position >> Expect.equal (vec2 5.0 5.0)
                             , .velocity >> Expect.equal (vec2 0.0 0.0)
+                            ]
+                            game
+            ]
+        , describe "movePaddle"
+            [ test "doesn’t leave the board with full height paddle" <|
+                \_ ->
+                    let
+                        game =
+                            gameWithFullHeightPaddles
+                                |> Game.movePaddle One -1.0
+                                |> Game.movePaddle Two 10.0
+                                |> Game.movePaddle One 2.0
+                                |> Game.movePaddle Two -5.0
+                    in
+                        Expect.all
+                            [ .player1 >> Expect.equal ( 0.0, 10.0 )
+                            , .player2 >> Expect.equal ( 0.0, 10.0 )
+                            ]
+                            game
+            , test "doesn’t leave the board with 0-height paddle" <|
+                \_ ->
+                    let
+                        game =
+                            gameWithoutPaddles
+                                |> Game.movePaddle One -1.0
+                                |> Game.movePaddle Two 10.0
+                                |> Game.movePaddle One 2.0
+                                |> Game.movePaddle Two -6.0
+                    in
+                        Expect.all
+                            [ .player1 >> Expect.equal ( 2.0, 0.0 )
+                            , .player2 >> Expect.equal ( 4.0, 0.0 )
                             ]
                             game
             ]
