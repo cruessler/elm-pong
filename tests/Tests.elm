@@ -8,13 +8,23 @@ import Test exposing (..)
 import Time
 
 
-sampleGame : Game
-sampleGame =
+gameWithFullHeightPaddles : Game
+gameWithFullHeightPaddles =
     { board = vec2 10.0 10.0
     , ball = vec2 1.0 1.0
     , position = vec2 5.0 5.0
     , velocity = vec2 1.0 0.0
+    , player1 = ( 0.0, 10.0 )
+    , player2 = ( 0.0, 10.0 )
     , lastTick = 0.0 * Time.second
+    }
+
+
+gameWithoutPaddles : Game
+gameWithoutPaddles =
+    { gameWithFullHeightPaddles
+        | player1 = ( 0.0, 0.0 )
+        , player2 = ( 0.0, 0.0 )
     }
 
 
@@ -26,7 +36,8 @@ game =
                 \_ ->
                     let
                         game =
-                            Game.advance (1.0 * Time.second) sampleGame
+                            gameWithFullHeightPaddles
+                                |> Game.advance (1.0 * Time.second)
                     in
                         Expect.all
                             [ getX >> Expect.equal 6.0
@@ -37,7 +48,9 @@ game =
                 \_ ->
                     let
                         game =
-                            { sampleGame | velocity = vec2 0.0 1.0 }
+                            { gameWithFullHeightPaddles
+                                | velocity = vec2 0.0 1.0
+                            }
                                 |> Game.advance (1.0 * Time.second)
                     in
                         Expect.all
@@ -49,7 +62,9 @@ game =
                 \_ ->
                     let
                         game =
-                            { sampleGame | position = vec2 9.5 5.0 }
+                            { gameWithFullHeightPaddles
+                                | position = vec2 9.5 5.0
+                            }
                                 |> Game.advance (1.0 * Time.second)
                     in
                         Expect.all
@@ -61,7 +76,7 @@ game =
                 \_ ->
                     let
                         game =
-                            { sampleGame
+                            { gameWithFullHeightPaddles
                                 | position = vec2 0.5 5.0
                                 , velocity = vec2 -1.0 0.0
                             }
@@ -76,7 +91,7 @@ game =
                 \_ ->
                     let
                         game =
-                            { sampleGame
+                            { gameWithFullHeightPaddles
                                 | position = vec2 5.0 0.5
                                 , velocity = vec2 0.0 -1.0
                             }
@@ -91,7 +106,7 @@ game =
                 \_ ->
                     let
                         game =
-                            { sampleGame
+                            { gameWithFullHeightPaddles
                                 | position = vec2 5.0 9.5
                                 , velocity = vec2 0.0 1.0
                             }
@@ -106,7 +121,7 @@ game =
                 \_ ->
                     let
                         game =
-                            { sampleGame
+                            { gameWithFullHeightPaddles
                                 | position = vec2 1.0 2.0
                                 , velocity = vec2 -3.0 -3.0
                             }
@@ -121,7 +136,7 @@ game =
                 \_ ->
                     let
                         game =
-                            { sampleGame
+                            { gameWithFullHeightPaddles
                                 | position = vec2 9.0 2.0
                                 , velocity = vec2 3.0 -3.0
                             }
@@ -136,7 +151,7 @@ game =
                 \_ ->
                     let
                         game =
-                            { sampleGame
+                            { gameWithFullHeightPaddles
                                 | position = vec2 5.0 5.0
                                 , velocity = vec2 0.000001 0.000001
                             }
@@ -151,7 +166,7 @@ game =
                 \_ ->
                     let
                         game =
-                            { sampleGame
+                            { gameWithFullHeightPaddles
                                 | position = vec2 5.0 5.0
                                 , velocity = vec2 50.0 50.0
                             }
@@ -170,7 +185,7 @@ game =
                 \x y ->
                     let
                         game =
-                            { sampleGame
+                            { gameWithFullHeightPaddles
                                 | velocity = vec2 x y
                             }
                                 |> Game.advance (1.0 * Time.second)
@@ -182,5 +197,19 @@ game =
                             , getY >> Expect.atMost (getY game.board)
                             ]
                             game.position
+            , test "resets ball if paddle is missed" <|
+                \_ ->
+                    let
+                        game =
+                            { gameWithoutPaddles
+                                | velocity = vec2 8.0 0.0
+                            }
+                                |> Game.advance (1.0 * Time.second)
+                    in
+                        Expect.all
+                            [ .position >> Expect.equal (vec2 5.0 5.0)
+                            , .velocity >> Expect.equal (vec2 0.0 0.0)
+                            ]
+                            game
             ]
         ]

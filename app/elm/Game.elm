@@ -1,7 +1,8 @@
-module Game exposing (..)
+module Game exposing (Game, advance)
 
 import Math.Vector2 as V exposing (Vec2, vec2, getX, getY, setX, setY)
 import Time exposing (Time)
+import Tuple exposing (first, second)
 
 
 type alias Board =
@@ -20,11 +21,19 @@ type alias Velocity =
     Vec2
 
 
+{-| Represents a paddle’s y position and height.
+-}
+type alias Paddle =
+    ( Float, Float )
+
+
 type alias Game =
     { board : Board
     , ball : Ball
     , position : Position
     , velocity : Velocity
+    , player1 : Paddle
+    , player2 : Paddle
     , lastTick : Time
     }
 
@@ -52,21 +61,64 @@ negateY v =
     setY -(getY v) v
 
 
+within : Float -> Float -> Float -> Bool
+within a b c =
+    a >= b && a <= c
+
+
+hitsPaddle : Float -> Paddle -> Bool
+hitsPaddle y paddle =
+    within
+        y
+        (first paddle)
+        (first paddle + second paddle)
+
+
+resetBall : Game -> Game
+resetBall game =
+    { game
+        | position = vec2 ((getX game.board) / 2) ((getY game.board) / 2)
+        , velocity = vec2 0.0 0.0
+    }
+
+
 bounceX : Float -> Vec2 -> Game -> Game
 bounceX r path game =
     let
         pathToWall =
             V.scale r path
 
-        deflectedPath =
-            (V.sub path pathToWall)
-                |> negateX
+        newPosition =
+            V.add game.position pathToWall
+
+        bounce : Game -> Game
+        bounce game =
+            let
+                deflectedPath =
+                    (V.sub path pathToWall)
+                        |> negateX
+            in
+                move deflectedPath
+                    { game
+                        | velocity = negateX game.velocity
+                        , position = newPosition
+                    }
+
+        f =
+            if getX newPosition == 0 then
+                if hitsPaddle (getY newPosition) game.player1 then
+                    bounce
+                else
+                    resetBall
+            else if getX newPosition == getX game.board then
+                if hitsPaddle (getY newPosition) game.player2 then
+                    bounce
+                else
+                    resetBall
+            else
+                bounce
     in
-        move deflectedPath
-            { game
-                | velocity = negateX game.velocity
-                , position = (V.add game.position pathToWall)
-            }
+        f game
 
 
 bounceY : Float -> Vec2 -> Game -> Game
