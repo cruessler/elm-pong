@@ -125,10 +125,20 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch
-        [ AnimationFrame.times Tick
-        , Mouse.moves MouseMove
-        ]
+    let
+        tuple =
+            model.game.velocity
+                |> Math.Vector2.toTuple
+    in
+        case tuple of
+            ( 0.0, 0.0 ) ->
+                Sub.none
+
+            _ ->
+                Sub.batch
+                    [ AnimationFrame.times Tick
+                    , Mouse.moves MouseMove
+                    ]
 
 
 ball : Game -> Html Msg
