@@ -1,21 +1,25 @@
 module Main exposing (main)
 
 import AnimationFrame
-import Game exposing (Game, Paddle)
+import Game exposing (Game, Paddle, Player(..))
 import Html as H exposing (Html)
 import Html.Attributes as A
 import Math.Vector2 exposing (vec2, getX, getY)
+import Mouse exposing (Position)
 import Task
 import Time exposing (Time)
 
 
 type alias Model =
-    { game : Game }
+    { game : Game
+    , lastMousePosition : Maybe Position
+    }
 
 
 type Msg
     = Restart Time
     | Tick Time
+    | MouseMove Position
 
 
 main =
@@ -74,6 +78,7 @@ init =
                 (vec2 ballWidth ballHeight)
                 paddleHeight
                 (vec2 width height)
+      , lastMousePosition = Nothing
       }
     , Task.perform Restart Time.now
     )
@@ -88,10 +93,32 @@ update msg model =
         Tick time ->
             ( { model | game = Game.advance time model.game }, Cmd.none )
 
+        MouseMove position ->
+            let
+                newGame =
+                    model.lastMousePosition
+                        |> Maybe.map
+                            (\lastPosition ->
+                                Game.movePaddle Two
+                                    (toFloat <| position.y - lastPosition.y)
+                                    model.game
+                            )
+                        |> Maybe.withDefault model.game
+            in
+                ( { model
+                    | lastMousePosition = Just position
+                    , game = newGame
+                  }
+                , Cmd.none
+                )
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    AnimationFrame.times Tick
+    Sub.batch
+        [ AnimationFrame.times Tick
+        , Mouse.moves MouseMove
+        ]
 
 
 ball : Game -> Html Msg
