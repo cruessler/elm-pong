@@ -4,6 +4,7 @@ import AnimationFrame
 import Game exposing (Game, Paddle, Player(..))
 import Html as H exposing (Html)
 import Html.Attributes as A
+import Html.Events as E
 import Math.Vector2 exposing (vec2, getX, getY)
 import Mouse exposing (Position)
 import Task
@@ -20,6 +21,7 @@ type Msg
     = Restart Time
     | Tick Time
     | MouseMove Position
+    | MouseClick
 
 
 main =
@@ -88,7 +90,12 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Restart time ->
-            ( { model | game = Game.reset time model.game }, Cmd.none )
+            ( { model
+                | lastMousePosition = Nothing
+                , game = Game.reset time model.game
+              }
+            , Cmd.none
+            )
 
         Tick time ->
             ( { model | game = Game.advance time model.game }, Cmd.none )
@@ -111,6 +118,9 @@ update msg model =
                   }
                 , Cmd.none
                 )
+
+        MouseClick ->
+            ( model, Task.perform Restart Time.now )
 
 
 subscriptions : Model -> Sub Msg
@@ -174,6 +184,7 @@ view model =
             [ ( "width", (toString <| width + ballWidth + 2 * paddleWidth) ++ "px" )
             , ( "height", (toString <| height + ballHeight) ++ "px" )
             ]
+        , E.onClick MouseClick
         ]
         [ board model.game
         , paddle 0 model.game.player1
