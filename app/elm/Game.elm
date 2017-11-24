@@ -1,4 +1,13 @@
-module Game exposing (Game, Player(..), advance, movePaddle)
+module Game
+    exposing
+        ( Game
+        , Paddle
+        , Player(..)
+        , initialize
+        , advance
+        , reset
+        , movePaddle
+        )
 
 import Math.Vector2 as V exposing (Vec2, vec2, getX, getY, setX, setY)
 import Time exposing (Time)
@@ -43,6 +52,28 @@ type alias Game =
     }
 
 
+initialize : Ball -> Float -> Board -> Game
+initialize ball paddleHeight board =
+    { board = board
+    , ball = ball
+    , position = initialBallPosition board
+    , velocity = vec2 0.0 0.0
+    , player1 = initialPaddlePosition paddleHeight board
+    , player2 = initialPaddlePosition paddleHeight board
+    , lastTick = 0.0 * Time.second
+    }
+
+
+initialBallPosition : Board -> Position
+initialBallPosition board =
+    vec2 ((getX board) / 2) ((getY board) / 2)
+
+
+initialPaddlePosition : Float -> Board -> Paddle
+initialPaddlePosition height board =
+    ( (getY board - height) / 2, height )
+
+
 advance : Float -> Game -> Game
 advance to game =
     let
@@ -79,10 +110,19 @@ hitsPaddle y paddle =
         (first paddle + second paddle)
 
 
+reset : Time -> Game -> Game
+reset lastTick game =
+    { game
+        | position = initialBallPosition game.board
+        , velocity = vec2 150.0 0.0
+        , lastTick = lastTick
+    }
+
+
 resetBall : Game -> Game
 resetBall game =
     { game
-        | position = vec2 ((getX game.board) / 2) ((getY game.board) / 2)
+        | position = initialBallPosition game.board
         , velocity = vec2 0.0 0.0
     }
 
