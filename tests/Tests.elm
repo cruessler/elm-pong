@@ -15,7 +15,9 @@ gameWithFullHeightPaddles =
     , position = vec2 5.0 5.0
     , velocity = vec2 1.0 0.0
     , player1 = ( 0.0, 10.0 )
+    , previousPlayer1 = ( 0.0, 10.0 )
     , player2 = ( 0.0, 10.0 )
+    , previousPlayer2 = ( 0.0, 10.0 )
     , lastTick = 0.0 * Time.second
     }
 

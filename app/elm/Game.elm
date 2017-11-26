@@ -47,21 +47,32 @@ type alias Game =
     , position : Position
     , velocity : Velocity
     , player1 : Paddle
+    , previousPlayer1 : Paddle
     , player2 : Paddle
+    , previousPlayer2 : Paddle
     , lastTick : Time
     }
 
 
 initialize : Ball -> Float -> Board -> Game
 initialize ball paddleHeight board =
-    { board = board
-    , ball = ball
-    , position = initialBallPosition board
-    , velocity = vec2 0.0 0.0
-    , player1 = initialPaddlePosition paddleHeight board
-    , player2 = initialPaddlePosition paddleHeight board
-    , lastTick = 0.0 * Time.second
-    }
+    let
+        paddle1 =
+            initialPaddlePosition paddleHeight board
+
+        paddle2 =
+            initialPaddlePosition paddleHeight board
+    in
+        { board = board
+        , ball = ball
+        , position = initialBallPosition board
+        , velocity = vec2 0.0 0.0
+        , player1 = paddle1
+        , previousPlayer1 = paddle1
+        , player2 = paddle2
+        , previousPlayer2 = paddle2
+        , lastTick = 0.0 * Time.second
+        }
 
 
 initialBallPosition : Board -> Position
@@ -115,6 +126,8 @@ reset lastTick game =
     { game
         | position = initialBallPosition game.board
         , velocity = vec2 150.0 0.0
+        , previousPlayer1 = game.player1
+        , previousPlayer2 = game.player2
         , lastTick = lastTick
     }
 
@@ -127,6 +140,12 @@ resetBall game =
     }
 
 
+accelerate : Float -> Vec2 -> Vec2
+accelerate yDiff path =
+    path
+        |> V.add (vec2 5.0 (10.0 * -yDiff))
+
+
 bounceX : Float -> Vec2 -> Game -> Game
 bounceX r path game =
     let
@@ -136,8 +155,8 @@ bounceX r path game =
         newPosition =
             V.add game.position pathToWall
 
-        bounce : Game -> Game
-        bounce game =
+        bounce : Float -> Game -> Game
+        bounce yDiff game =
             let
                 deflectedPath =
                     (V.sub path pathToWall)
@@ -145,23 +164,38 @@ bounceX r path game =
             in
                 move deflectedPath
                     { game
-                        | velocity = negateX game.velocity
+                        | velocity =
+                            game.velocity
+                                |> negateX
+                                |> accelerate yDiff
                         , position = newPosition
                     }
+
+        deflectBy : Paddle -> Paddle -> Float
+        deflectBy ( y, _ ) paddle =
+            y - first paddle
 
         f =
             if getX newPosition == 0 then
                 if hitsPaddle (getY newPosition) game.player1 then
                     bounce
+                        (deflectBy
+                            game.previousPlayer1
+                            game.player1
+                        )
                 else
                     resetBall
             else if getX newPosition == getX game.board then
                 if hitsPaddle (getY newPosition) game.player2 then
                     bounce
+                        (deflectBy
+                            game.previousPlayer2
+                            game.player2
+                        )
                 else
                     resetBall
             else
-                bounce
+                bounce 0
     in
         f game
 
@@ -242,6 +276,7 @@ movePaddle player yDiff game =
                     Tuple.mapFirst
                         (\y -> clamp 0 (getY game.board - second game.player1) (y + yDiff))
                         game.player1
+                , previousPlayer1 = game.player1
             }
 
         Two ->
@@ -250,4 +285,5 @@ movePaddle player yDiff game =
                     Tuple.mapFirst
                         (\y -> clamp 0 (getY game.board - second game.player2) (y + yDiff))
                         game.player2
+                , previousPlayer2 = game.player2
             }
