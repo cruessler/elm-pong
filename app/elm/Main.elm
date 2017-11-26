@@ -26,7 +26,7 @@ init =
     ( { game =
             Game.initialize
                 (vec2 M.ballWidth M.ballHeight)
-                M.paddleHeight
+                (vec2 M.paddleWidth M.paddleHeight)
                 (vec2 M.width M.height)
       , lastMousePosition = Nothing
       }

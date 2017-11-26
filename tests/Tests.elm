@@ -14,10 +14,11 @@ gameWithFullHeightPaddles =
     , ball = vec2 1.0 1.0
     , position = vec2 5.0 5.0
     , velocity = vec2 1.0 0.0
-    , player1 = ( 0.0, 10.0 )
-    , previousPlayer1 = ( 0.0, 10.0 )
-    , player2 = ( 0.0, 10.0 )
-    , previousPlayer2 = ( 0.0, 10.0 )
+    , paddle = vec2 1.0 10.0
+    , player1 = vec2 0.0 0.0
+    , previousPlayer1 = vec2 0.0 0.0
+    , player2 = vec2 10.0 0.0
+    , previousPlayer2 = vec2 10.0 0.0
     , lastTick = 0.0 * Time.second
     }
 
@@ -25,8 +26,7 @@ gameWithFullHeightPaddles =
 gameWithoutPaddles : Game
 gameWithoutPaddles =
     { gameWithFullHeightPaddles
-        | player1 = ( 0.0, 0.0 )
-        , player2 = ( 0.0, 0.0 )
+        | paddle = vec2 0.0 0.0
     }
 
 
@@ -70,7 +70,7 @@ game =
                                 |> Game.advance (1.0 * Time.second)
                     in
                         Expect.all
-                            [ getX >> Expect.equal 9.5
+                            [ getX >> Expect.equal 8.5
                             , getY >> Expect.equal 5.0
                             ]
                             game.position
@@ -85,7 +85,7 @@ game =
                                 |> Game.advance (1.0 * Time.second)
                     in
                         Expect.all
-                            [ getX >> Expect.equal 0.5
+                            [ getX >> Expect.equal 1.5
                             , getY >> Expect.equal 5.0
                             ]
                             game.position
@@ -101,7 +101,7 @@ game =
                     in
                         Expect.all
                             [ getX >> Expect.equal 5.0
-                            , getY >> Expect.equal 0.5
+                            , getY >> Expect.equal 1.5
                             ]
                             game.position
             , test "ball bounces off the bottom wall" <|
@@ -116,7 +116,7 @@ game =
                     in
                         Expect.all
                             [ getX >> Expect.equal 5.0
-                            , getY >> Expect.equal 9.5
+                            , getY >> Expect.equal 8.5
                             ]
                             game.position
             , test "ball bounces twice in top left corner" <|
@@ -130,8 +130,8 @@ game =
                                 |> Game.advance (1.0 * Time.second)
                     in
                         Expect.all
-                            [ getX >> Expect.equal 2.0
-                            , getY >> Expect.equal 1.0
+                            [ getX >> Expect.equal 3.0
+                            , getY >> Expect.equal 2.0
                             ]
                             game.position
             , test "ball bounces twice in top right corner" <|
@@ -145,8 +145,8 @@ game =
                                 |> Game.advance (1.0 * Time.second)
                     in
                         Expect.all
-                            [ getX >> Expect.equal 8.0
-                            , getY >> Expect.equal 1.0
+                            [ getX >> Expect.equal 7.0
+                            , getY >> Expect.equal 2.0
                             ]
                             game.position
             , test "ball moves very slowly" <|
@@ -175,8 +175,8 @@ game =
                                 |> Game.advance (1.0 * Time.second)
                     in
                         Expect.all
-                            [ getX >> Expect.within (Absolute 0.000001) 5.0
-                            , getY >> Expect.within (Absolute 0.000001) 5.0
+                            [ getX >> Expect.within (Absolute 0.000001) 1.0
+                            , getY >> Expect.within (Absolute 0.000001) 1.0
                             ]
                             game.position
             , fuzz2
@@ -226,8 +226,8 @@ game =
                                 |> Game.movePaddle Two -5.0
                     in
                         Expect.all
-                            [ .player1 >> Expect.equal ( 0.0, 10.0 )
-                            , .player2 >> Expect.equal ( 0.0, 10.0 )
+                            [ .player1 >> V.toTuple >> Expect.equal ( 0.0, 0.0 )
+                            , .player2 >> V.toTuple >> Expect.equal ( 10.0, 0.0 )
                             ]
                             game
             , test "doesn’t leave the board with 0-height paddle" <|
@@ -241,8 +241,8 @@ game =
                                 |> Game.movePaddle Two -6.0
                     in
                         Expect.all
-                            [ .player1 >> Expect.equal ( 2.0, 0.0 )
-                            , .player2 >> Expect.equal ( 4.0, 0.0 )
+                            [ .player1 >> V.toTuple >> Expect.equal ( 0.0, 2.0 )
+                            , .player2 >> V.toTuple >> Expect.equal ( 10.0, 4.0 )
                             ]
                             game
             ]

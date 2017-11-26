@@ -1,6 +1,6 @@
 module Backend.Svg exposing (view)
 
-import Game exposing (Game, Paddle)
+import Game exposing (Game, Paddle, Position)
 import Html exposing (Html)
 import Math.Vector2 exposing (getX, getY)
 import Model as M exposing (Model)
@@ -14,21 +14,21 @@ ball : Game -> Svg Msg
 ball game =
     S.circle
         [ A.id "ball"
-        , A.cx <| toString <| getX game.position + M.paddleWidth + M.halfBallWidth
-        , A.cy <| toString <| getY game.position + M.halfBallHeight
+        , A.cx <| toString <| getX game.position + M.paddleWidth
+        , A.cy <| toString <| getY game.position
         , A.r <| toString <| M.halfBallWidth
         ]
         []
 
 
-paddle : Float -> Paddle -> Svg Msg
-paddle x ( y, height ) =
+paddle : Paddle -> Position -> Svg Msg
+paddle paddle position =
     S.rect
         [ A.class "paddle"
-        , A.x <| toString x
-        , A.y <| toString <| y + M.halfBallHeight
-        , A.width <| toString M.paddleWidth
-        , A.height <| toString height
+        , A.x <| toString <| getX position
+        , A.y <| toString <| getY position
+        , A.width <| toString <| getX paddle
+        , A.height <| toString <| getY paddle
         ]
         []
 
@@ -37,10 +37,10 @@ view : Model -> Html Msg
 view model =
     let
         width =
-            toString <| M.width + M.ballWidth + 2 * M.paddleWidth
+            toString <| M.width + 2 * M.paddleWidth
 
         height =
-            toString <| M.height + M.ballHeight
+            toString <| M.height
     in
         S.svg
             [ A.id "container"
@@ -48,6 +48,6 @@ view model =
             , E.onClick MouseClick
             ]
             [ ball model.game
-            , paddle 0 model.game.player1
-            , paddle (M.paddleWidth + getX model.game.board + M.ballWidth) model.game.player2
+            , paddle model.game.paddle model.game.player1
+            , paddle model.game.paddle model.game.player2
             ]

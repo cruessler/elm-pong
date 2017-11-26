@@ -2,6 +2,7 @@ module Game
     exposing
         ( Game
         , Paddle
+        , Position
         , Player(..)
         , initialize
         , advance
@@ -33,7 +34,7 @@ type alias Velocity =
 {-| Represents a paddle’s y position and height.
 -}
 type alias Paddle =
-    ( Float, Float )
+    Vec2
 
 
 type Player
@@ -46,31 +47,33 @@ type alias Game =
     , ball : Ball
     , position : Position
     , velocity : Velocity
-    , player1 : Paddle
-    , previousPlayer1 : Paddle
-    , player2 : Paddle
-    , previousPlayer2 : Paddle
+    , paddle : Paddle
+    , player1 : Position
+    , previousPlayer1 : Position
+    , player2 : Position
+    , previousPlayer2 : Position
     , lastTick : Time
     }
 
 
-initialize : Ball -> Float -> Board -> Game
-initialize ball paddleHeight board =
+initialize : Ball -> Paddle -> Board -> Game
+initialize ball paddle board =
     let
-        paddle1 =
-            initialPaddlePosition paddleHeight board
+        player1 =
+            initialPlayerPosition 0 paddle board
 
-        paddle2 =
-            initialPaddlePosition paddleHeight board
+        player2 =
+            initialPlayerPosition (getX board + getX paddle) paddle board
     in
         { board = board
         , ball = ball
         , position = initialBallPosition board
         , velocity = vec2 0.0 0.0
-        , player1 = paddle1
-        , previousPlayer1 = paddle1
-        , player2 = paddle2
-        , previousPlayer2 = paddle2
+        , paddle = paddle
+        , player1 = player1
+        , previousPlayer1 = player1
+        , player2 = player2
+        , previousPlayer2 = player2
         , lastTick = 0.0 * Time.second
         }
 
@@ -80,9 +83,9 @@ initialBallPosition board =
     vec2 ((getX board) / 2) ((getY board) / 2)
 
 
-initialPaddlePosition : Float -> Board -> Paddle
-initialPaddlePosition height board =
-    ( (getY board - height) / 2, height )
+initialPlayerPosition : Float -> Paddle -> Board -> Position
+initialPlayerPosition x paddle board =
+    vec2 x ((getY board - getY paddle) / 2)
 
 
 advance : Float -> Game -> Game
@@ -113,12 +116,12 @@ within a b c =
     a >= b && a <= c
 
 
-hitsPaddle : Float -> Paddle -> Bool
-hitsPaddle y paddle =
+hitsPaddle : Float -> Paddle -> Position -> Bool
+hitsPaddle y paddle position =
     within
         y
-        (first paddle)
-        (first paddle + second paddle)
+        (getY position)
+        (getY position + getY paddle)
 
 
 reset : Time -> Game -> Game
@@ -155,6 +158,12 @@ bounceX r path game =
         newPosition =
             V.add game.position pathToWall
 
+        halfBallWidth =
+            (getX game.ball) / 2
+
+        halfBallHeight =
+            (getY game.ball) / 2
+
         bounce : Float -> Game -> Game
         bounce yDiff game =
             let
@@ -171,13 +180,13 @@ bounceX r path game =
                         , position = newPosition
                     }
 
-        deflectBy : Paddle -> Paddle -> Float
-        deflectBy ( y, _ ) paddle =
-            y - first paddle
+        deflectBy : Position -> Position -> Float
+        deflectBy previousPosition position =
+            getY previousPosition - getY position
 
         f =
-            if getX newPosition == 0 then
-                if hitsPaddle (getY newPosition) game.player1 then
+            if getX newPosition <= halfBallWidth then
+                if hitsPaddle (getY newPosition) game.paddle game.player1 then
                     bounce
                         (deflectBy
                             game.previousPlayer1
@@ -185,8 +194,8 @@ bounceX r path game =
                         )
                 else
                     resetBall
-            else if getX newPosition == getX game.board then
-                if hitsPaddle (getY newPosition) game.player2 then
+            else if getX newPosition >= getX game.board - halfBallWidth then
+                if hitsPaddle (getY newPosition) game.paddle game.player2 then
                     bounce
                         (deflectBy
                             game.previousPlayer2
@@ -223,6 +232,12 @@ move path game =
         newPosition =
             V.add game.position path
 
+        halfBallWidth =
+            (getX game.ball) / 2
+
+        halfBallHeight =
+            (getY game.ball) / 2
+
         {- This list initially contains 4 3-tuples for each side of the board
            that can be hit by the ball, in the order: left, right, top, bottom.
 
@@ -237,20 +252,20 @@ move path game =
            collision so that the closest collision takes precedence.
         -}
         bounces =
-            [ ( getX newPosition < 0
-              , (getX game.position) / getX path |> abs
+            [ ( getX newPosition < halfBallWidth
+              , (getX game.position - halfBallWidth) / getX path |> abs
               , bounceX
               )
-            , ( getX newPosition > getX game.board
-              , (getX game.board - getX game.position) / getX path |> abs
+            , ( getX newPosition > (getX game.board - halfBallWidth)
+              , (getX game.board - getX game.position - halfBallWidth) / getX path |> abs
               , bounceX
               )
-            , ( getY newPosition < 0
-              , (getY game.position) / getY path |> abs
+            , ( getY newPosition < halfBallHeight
+              , (getY game.position - halfBallHeight) / getY path |> abs
               , bounceY
               )
-            , ( getY newPosition > getY game.board
-              , (getY game.board - getY game.position) / getY path |> abs
+            , ( getY newPosition > (getY game.board - halfBallHeight)
+              , (getY game.board - getY game.position - halfBallHeight) / getY path |> abs
               , bounceY
               )
             ]
@@ -273,8 +288,12 @@ movePaddle player yDiff game =
         One ->
             { game
                 | player1 =
-                    Tuple.mapFirst
-                        (\y -> clamp 0 (getY game.board - second game.player1) (y + yDiff))
+                    setY
+                        (clamp
+                            0
+                            (getY game.board - getY game.paddle)
+                            (getY game.player1 + yDiff)
+                        )
                         game.player1
                 , previousPlayer1 = game.player1
             }
@@ -282,8 +301,12 @@ movePaddle player yDiff game =
         Two ->
             { game
                 | player2 =
-                    Tuple.mapFirst
-                        (\y -> clamp 0 (getY game.board - second game.player2) (y + yDiff))
+                    setY
+                        (clamp
+                            0
+                            (getY game.board - getY game.paddle)
+                            (getY game.player2 + yDiff)
+                        )
                         game.player2
                 , previousPlayer2 = game.player2
             }
