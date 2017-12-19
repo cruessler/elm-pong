@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 import Backend.Svg
+import Backend.WebGL
 import Browser
 import Browser.Events as Events
 import Game exposing (Player(..))
@@ -115,6 +116,10 @@ backendSwitch currentBackend =
             [ backendRadio Svg currentBackend
             , H.text "SVG"
             ]
+        , H.label []
+            [ backendRadio WebGL currentBackend
+            , H.text "WebGL"
+            ]
         ]
 
 
@@ -124,10 +129,13 @@ backend model =
         Svg ->
             Backend.Svg.view model
 
+        WebGL ->
+            Backend.WebGL.view model
+
 
 view : Model -> Html Msg
 view model =
-    H.div []
-        [ backendSwitch model.backend
-        , backend model
+    H.div [ A.id "viewport" ]
+        [ backend model
+        , backendSwitch model.backend
         ]

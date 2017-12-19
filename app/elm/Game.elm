@@ -1,5 +1,6 @@
 module Game exposing
-    ( Game
+    ( Ball
+    , Game
     , Paddle
     , Player(..)
     , Position
@@ -10,8 +11,6 @@ module Game exposing
     )
 
 import Math.Vector2 as V exposing (Vec2, getX, getY, setX, setY, vec2)
-import Time
-import Tuple exposing (first, second)
 
 
 type alias Board =

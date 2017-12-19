@@ -21,6 +21,7 @@ type alias Position =
 
 type Backend
     = Svg
+    | WebGL
 
 
 type alias Model =

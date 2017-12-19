@@ -21,11 +21,16 @@ body
     margin: 0.3em 0
     font-size: x-large
 
-#container
-  width: 100vw
+#viewport
+  display: flex
   height: 100vh
 
   background-color: gray
+
+#container
+  width: 100%
+
+  object-fit: contain
 
   & > .paddle
     background-color: black
