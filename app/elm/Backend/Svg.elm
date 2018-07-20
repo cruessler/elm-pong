@@ -35,13 +35,19 @@ paddle x ( y, height ) =
 
 view : Model -> Html Msg
 view model =
-    S.svg
-        [ A.id "container"
-        , A.width <| toString <| M.width + M.ballWidth + 2 * M.paddleWidth
-        , A.height <| toString <| M.height + M.ballHeight
-        , E.onClick MouseClick
-        ]
-        [ ball model.game
-        , paddle 0 model.game.player1
-        , paddle (M.paddleWidth + getX model.game.board + M.ballWidth) model.game.player2
-        ]
+    let
+        width =
+            toString <| M.width + M.ballWidth + 2 * M.paddleWidth
+
+        height =
+            toString <| M.height + M.ballHeight
+    in
+        S.svg
+            [ A.id "container"
+            , A.viewBox <| "0 0 " ++ width ++ " " ++ height
+            , E.onClick MouseClick
+            ]
+            [ ball model.game
+            , paddle 0 model.game.player1
+            , paddle (M.paddleWidth + getX model.game.board + M.ballWidth) model.game.player2
+            ]
