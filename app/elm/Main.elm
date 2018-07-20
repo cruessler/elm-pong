@@ -1,7 +1,7 @@
 module Main exposing (main)
 
 import AnimationFrame
-import Backend.Html
+import Backend.Svg
 import Game exposing (Player(..))
 import Html as H exposing (Html)
 import Math.Vector2 exposing (vec2)
@@ -91,4 +91,4 @@ subscriptions model =
 
 view : Model -> Html Msg
 view model =
-    Backend.Html.view model
+    Backend.Svg.view model
