@@ -5,24 +5,21 @@
   "main": "brunch-config.js",
   "scripts": {
     "postinstall": "elm package install -y",
-    "start": "brunch watch --server",
-    "prod": "brunch build --production",
-    "test": "./node_modules/elm-test/bin/elm-test"
+    "start": "parcel app/assets/index.html",
+    "build": "parcel build app/assets/index.html",
+    "test": "elm-test"
   },
   "keywords": [
     "elm",
-    "brunch",
     "sass"
   ],
   "author": "Christoph Rüßler <christoph.ruessler@mailbox.org>",
   "license": "MIT",
-  "dependencies": {},
   "devDependencies": {
-    "auto-reload-brunch": "^2.7.1",
-    "brunch": "^2.8.2",
-    "elm-brunch": "^0.7.0",
+    "elm": "^0.18.0",
     "elm-test": "^0.18.9",
-    "hmr-brunch": "^0.1.1",
-    "sass-brunch": "^2.6.3"
+    "node-sass": "^4.12.0",
+    "parcel-bundler": "^1.9.7",
+    "parcel-plugin-elm": "^0.1.4-alpha"
   }
 }
