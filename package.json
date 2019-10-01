@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "description": "elm-pong: Yet another Pong, written in Elm",
   "scripts": {
-    "postinstall": "elm package install -y",
     "start": "parcel app/assets/index.html",
     "build": "parcel build app/assets/index.html",
     "test": "elm-test"
