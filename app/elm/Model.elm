@@ -1,18 +1,21 @@
-module Model
-    exposing
-        ( Model
-        , width
-        , height
-        , ballWidth
-        , halfBallWidth
-        , ballHeight
-        , halfBallHeight
-        , paddleWidth
-        , paddleHeight
-        )
+module Model exposing
+    ( Model
+    , Position
+    , ballHeight
+    , ballWidth
+    , halfBallHeight
+    , halfBallWidth
+    , height
+    , paddleHeight
+    , paddleWidth
+    , width
+    )
 
 import Game exposing (Game, Paddle, Player(..))
-import Mouse exposing (Position)
+
+
+type alias Position =
+    { x : Int, y : Int }
 
 
 type alias Model =

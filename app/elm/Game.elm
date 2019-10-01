@@ -1,17 +1,16 @@
-module Game
-    exposing
-        ( Game
-        , Paddle
-        , Position
-        , Player(..)
-        , initialize
-        , advance
-        , reset
-        , movePaddle
-        )
+module Game exposing
+    ( Game
+    , Paddle
+    , Player(..)
+    , Position
+    , advance
+    , initialize
+    , movePaddle
+    , reset
+    )
 
-import Math.Vector2 as V exposing (Vec2, vec2, getX, getY, setX, setY)
-import Time exposing (Time)
+import Math.Vector2 as V exposing (Vec2, getX, getY, setX, setY, vec2)
+import Time
 import Tuple exposing (first, second)
 
 
@@ -46,13 +45,12 @@ type alias Game =
     { board : Board
     , ball : Ball
     , position : Position
-    , velocity : Velocity
+    , velocity : Maybe Velocity
     , paddle : Paddle
     , player1 : Position
     , previousPlayer1 : Position
     , player2 : Position
     , previousPlayer2 : Position
-    , lastTick : Time
     }
 
 
@@ -65,22 +63,21 @@ initialize ball paddle board =
         player2 =
             initialPlayerPosition (getX board + getX paddle) paddle board
     in
-        { board = board
-        , ball = ball
-        , position = initialBallPosition board
-        , velocity = vec2 0.0 0.0
-        , paddle = paddle
-        , player1 = player1
-        , previousPlayer1 = player1
-        , player2 = player2
-        , previousPlayer2 = player2
-        , lastTick = 0.0 * Time.second
-        }
+    { board = board
+    , ball = ball
+    , position = initialBallPosition board
+    , velocity = Just <| vec2 0.0 0.0
+    , paddle = paddle
+    , player1 = player1
+    , previousPlayer1 = player1
+    , player2 = player2
+    , previousPlayer2 = player2
+    }
 
 
 initialBallPosition : Board -> Position
 initialBallPosition board =
-    vec2 ((getX board) / 2) ((getY board) / 2)
+    vec2 (getX board / 2) (getY board / 2)
 
 
 initialPlayerPosition : Float -> Paddle -> Board -> Position
@@ -89,16 +86,14 @@ initialPlayerPosition x paddle board =
 
 
 advance : Float -> Game -> Game
-advance to game =
-    let
-        timeDiff =
-            (to - game.lastTick) |> Time.inSeconds
-
-        newGame =
+advance delta game =
+    case game.velocity of
+        Just velocity ->
             game
-                |> move (V.scale timeDiff game.velocity)
-    in
-        { newGame | lastTick = to }
+                |> move (V.scale delta velocity)
+
+        Nothing ->
+            game
 
 
 negateX : Vec2 -> Vec2
@@ -124,14 +119,13 @@ hitsPaddle y paddle position =
         (getY position + getY paddle)
 
 
-reset : Time -> Game -> Game
-reset lastTick game =
+reset : Game -> Game
+reset game =
     { game
         | position = initialBallPosition game.board
-        , velocity = vec2 150.0 0.0
+        , velocity = Just <| vec2 150.0 0.0
         , previousPlayer1 = game.player1
         , previousPlayer2 = game.player2
-        , lastTick = lastTick
     }
 
 
@@ -139,7 +133,7 @@ resetBall : Game -> Game
 resetBall game =
     { game
         | position = initialBallPosition game.board
-        , velocity = vec2 0.0 0.0
+        , velocity = Nothing
     }
 
 
@@ -159,26 +153,26 @@ bounceX r path game =
             V.add game.position pathToWall
 
         halfBallWidth =
-            (getX game.ball) / 2
+            getX game.ball / 2
 
         halfBallHeight =
-            (getY game.ball) / 2
+            getY game.ball / 2
 
         bounce : Float -> Game -> Game
-        bounce yDiff game =
+        bounce yDiff game_ =
             let
                 deflectedPath =
-                    (V.sub path pathToWall)
+                    V.sub path pathToWall
                         |> negateX
             in
-                move deflectedPath
-                    { game
-                        | velocity =
-                            game.velocity
-                                |> negateX
-                                |> accelerate yDiff
-                        , position = newPosition
-                    }
+            move deflectedPath
+                { game_
+                    | velocity =
+                        Maybe.map
+                            (negateX >> accelerate yDiff)
+                            game_.velocity
+                    , position = newPosition
+                }
 
         deflectBy : Position -> Position -> Float
         deflectBy previousPosition position =
@@ -192,8 +186,10 @@ bounceX r path game =
                             game.previousPlayer1
                             game.player1
                         )
+
                 else
                     resetBall
+
             else if getX newPosition >= getX game.board - halfBallWidth then
                 if hitsPaddle (getY newPosition) game.paddle game.player2 then
                     bounce
@@ -201,12 +197,14 @@ bounceX r path game =
                             game.previousPlayer2
                             game.player2
                         )
+
                 else
                     resetBall
+
             else
                 bounce 0
     in
-        f game
+    f game
 
 
 bounceY : Float -> Vec2 -> Game -> Game
@@ -216,14 +214,14 @@ bounceY r path game =
             V.scale r path
 
         deflectedPath =
-            (V.sub path pathToWall)
+            V.sub path pathToWall
                 |> negateY
     in
-        move deflectedPath
-            { game
-                | velocity = negateY game.velocity
-                , position = (V.add game.position pathToWall)
-            }
+    move deflectedPath
+        { game
+            | velocity = Maybe.map negateY game.velocity
+            , position = V.add game.position pathToWall
+        }
 
 
 move : Vec2 -> Game -> Game
@@ -233,10 +231,10 @@ move path game =
             V.add game.position path
 
         halfBallWidth =
-            (getX game.ball) / 2
+            getX game.ball / 2
 
         halfBallHeight =
-            (getY game.ball) / 2
+            getY game.ball / 2
 
         {- This list initially contains 4 3-tuples for each side of the board
            that can be hit by the ball, in the order: left, right, top, bottom.
@@ -272,14 +270,14 @@ move path game =
                 |> List.filter (\( b, _, _ ) -> b)
                 |> List.sortBy (\( _, r, _ ) -> r)
     in
-        bounces
-            |> List.head
-            |> Maybe.map (\( _, r, f ) -> f r path game)
-            |> Maybe.withDefault
-                { game
-                    | position =
-                        newPosition
-                }
+    bounces
+        |> List.head
+        |> Maybe.map (\( _, r, f ) -> f r path game)
+        |> Maybe.withDefault
+            { game
+                | position =
+                    newPosition
+            }
 
 
 movePaddle : Player -> Float -> Game -> Game

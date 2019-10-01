@@ -1,19 +1,20 @@
 module Main exposing (main)
 
-import AnimationFrame
 import Backend.Svg
+import Browser
+import Browser.Events as Events
 import Game exposing (Player(..))
 import Html as H exposing (Html)
+import Json.Decode as D
 import Math.Vector2 exposing (vec2)
-import Model as M exposing (Model)
+import Model as M exposing (Model, Position)
 import Msg exposing (Msg(..))
-import Mouse
 import Task
 import Time
 
 
 main =
-    H.program
+    Browser.element
         { init = init
         , update = update
         , subscriptions = subscriptions
@@ -21,8 +22,8 @@ main =
         }
 
 
-init : ( Model, Cmd Msg )
-init =
+init : () -> ( Model, Cmd Msg )
+init _ =
     ( { game =
             Game.initialize
                 (vec2 M.ballWidth M.ballHeight)
@@ -30,23 +31,15 @@ init =
                 (vec2 M.width M.height)
       , lastMousePosition = Nothing
       }
-    , Task.perform Restart Time.now
+    , Cmd.none
     )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Restart time ->
-            ( { model
-                | lastMousePosition = Nothing
-                , game = Game.reset time model.game
-              }
-            , Cmd.none
-            )
-
-        Tick time ->
-            ( { model | game = Game.advance time model.game }, Cmd.none )
+        Tick delta ->
+            ( { model | game = Game.advance (delta / 1000) model.game }, Cmd.none )
 
         MouseMove position ->
             let
@@ -60,33 +53,38 @@ update msg model =
                             )
                         |> Maybe.withDefault model.game
             in
-                ( { model
-                    | lastMousePosition = Just position
-                    , game = newGame
-                  }
-                , Cmd.none
-                )
+            ( { model
+                | lastMousePosition = Just position
+                , game = newGame
+              }
+            , Cmd.none
+            )
 
         MouseClick ->
-            ( model, Task.perform Restart Time.now )
+            ( { model
+                | lastMousePosition = Nothing
+                , game = Game.reset model.game
+              }
+            , Cmd.none
+            )
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    let
-        tuple =
-            model.game.velocity
-                |> Math.Vector2.toTuple
-    in
-        case tuple of
-            ( 0.0, 0.0 ) ->
-                Sub.none
+    case model.game.velocity of
+        Nothing ->
+            Sub.none
 
-            _ ->
-                Sub.batch
-                    [ AnimationFrame.times Tick
-                    , Mouse.moves MouseMove
-                    ]
+        _ ->
+            let
+                decodePosition : D.Decoder Position
+                decodePosition =
+                    D.map2 Position (D.at [ "offsetX" ] D.int) (D.at [ "offsetY" ] D.int)
+            in
+            Sub.batch
+                [ Events.onAnimationFrameDelta Tick
+                , Events.onMouseMove (D.map MouseMove decodePosition)
+                ]
 
 
 view : Model -> Html Msg

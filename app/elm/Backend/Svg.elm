@@ -14,21 +14,21 @@ ball : Game -> Svg Msg
 ball game =
     S.circle
         [ A.id "ball"
-        , A.cx <| toString <| getX game.position + M.paddleWidth
-        , A.cy <| toString <| getY game.position
-        , A.r <| toString <| M.halfBallWidth
+        , A.cx <| String.fromFloat <| getX game.position + M.paddleWidth
+        , A.cy <| String.fromFloat <| getY game.position
+        , A.r <| String.fromFloat <| M.halfBallWidth
         ]
         []
 
 
 paddle : Paddle -> Position -> Svg Msg
-paddle paddle position =
+paddle paddle_ position =
     S.rect
         [ A.class "paddle"
-        , A.x <| toString <| getX position
-        , A.y <| toString <| getY position
-        , A.width <| toString <| getX paddle
-        , A.height <| toString <| getY paddle
+        , A.x <| String.fromFloat <| getX position
+        , A.y <| String.fromFloat <| getY position
+        , A.width <| String.fromFloat <| getX paddle_
+        , A.height <| String.fromFloat <| getY paddle_
         ]
         []
 
@@ -37,17 +37,17 @@ view : Model -> Html Msg
 view model =
     let
         width =
-            toString <| M.width + 2 * M.paddleWidth
+            String.fromFloat <| M.width + 2 * M.paddleWidth
 
         height =
-            toString <| M.height
+            String.fromFloat <| M.height
     in
-        S.svg
-            [ A.id "container"
-            , A.viewBox <| "0 0 " ++ width ++ " " ++ height
-            , E.onClick MouseClick
-            ]
-            [ ball model.game
-            , paddle model.game.paddle model.game.player1
-            , paddle model.game.paddle model.game.player2
-            ]
+    S.svg
+        [ A.id "container"
+        , A.viewBox <| "0 0 " ++ width ++ " " ++ height
+        , E.onClick MouseClick
+        ]
+        [ ball model.game
+        , paddle model.game.paddle model.game.player1
+        , paddle model.game.paddle model.game.player2
+        ]

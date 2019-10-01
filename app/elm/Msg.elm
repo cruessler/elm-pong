@@ -1,11 +1,9 @@
 module Msg exposing (Msg(..))
 
-import Mouse exposing (Position)
-import Time exposing (Time)
+import Model exposing (Position)
 
 
 type Msg
-    = Restart Time
-    | Tick Time
+    = Tick Float
     | MouseMove Position
     | MouseClick
