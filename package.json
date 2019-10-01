@@ -2,7 +2,6 @@
   "name": "elm-pong",
   "version": "0.0.1",
   "description": "elm-pong: Yet another Pong, written in Elm",
-  "main": "brunch-config.js",
   "scripts": {
     "postinstall": "elm package install -y",
     "start": "parcel app/assets/index.html",
