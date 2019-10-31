@@ -1,5 +1,6 @@
 module Model exposing
-    ( Model
+    ( Backend(..)
+    , Model
     , Position
     , ballHeight
     , ballWidth
@@ -18,9 +19,14 @@ type alias Position =
     { x : Int, y : Int }
 
 
+type Backend
+    = Svg
+
+
 type alias Model =
     { game : Game
     , lastMousePosition : Maybe Position
+    , backend : Backend
     }
 
 

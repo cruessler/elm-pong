@@ -5,9 +5,11 @@ import Browser
 import Browser.Events as Events
 import Game exposing (Player(..))
 import Html as H exposing (Html)
+import Html.Attributes as A
+import Html.Events as E
 import Json.Decode as D
 import Math.Vector2 exposing (vec2)
-import Model as M exposing (Model, Position)
+import Model as M exposing (Backend(..), Model, Position)
 import Msg exposing (Msg(..))
 import Task
 import Time
@@ -30,6 +32,7 @@ init _ =
                 (vec2 M.paddleWidth M.paddleHeight)
                 (vec2 M.width M.height)
       , lastMousePosition = Nothing
+      , backend = Svg
       }
     , Cmd.none
     )
@@ -68,6 +71,9 @@ update msg model =
             , Cmd.none
             )
 
+        SetBackend newBackend ->
+            ( { model | backend = newBackend }, Cmd.none )
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -87,6 +93,41 @@ subscriptions model =
                 ]
 
 
+backendRadio : Backend -> Backend -> Html Msg
+backendRadio newBackend currentBackend =
+    let
+        checked =
+            newBackend == currentBackend
+    in
+    H.input
+        [ A.type_ "radio"
+        , A.checked checked
+        , E.onClick (SetBackend newBackend)
+        ]
+        []
+
+
+backendSwitch : Backend -> Html Msg
+backendSwitch currentBackend =
+    H.div [ A.id "backend-switch" ]
+        [ H.h1 [] [ H.text "Choose backend" ]
+        , H.label []
+            [ backendRadio Svg currentBackend
+            , H.text "SVG"
+            ]
+        ]
+
+
+backend : Model -> Html Msg
+backend model =
+    case model.backend of
+        Svg ->
+            Backend.Svg.view model
+
+
 view : Model -> Html Msg
 view model =
-    Backend.Svg.view model
+    H.div []
+        [ backendSwitch model.backend
+        , backend model
+        ]
