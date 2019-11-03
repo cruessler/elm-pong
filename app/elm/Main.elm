@@ -32,6 +32,7 @@ init _ =
                 (vec2 M.ballWidth M.ballHeight)
                 (vec2 M.paddleWidth M.paddleHeight)
                 (vec2 M.width M.height)
+                One
       , lastMousePosition = Nothing
       , backend = Svg
       }
@@ -51,7 +52,7 @@ update msg model =
                     model.lastMousePosition
                         |> Maybe.map
                             (\lastPosition ->
-                                Game.movePaddle Two
+                                Game.movePlayerPaddle
                                     (toFloat <| position.y - lastPosition.y)
                                     model.game
                             )

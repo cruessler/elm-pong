@@ -7,6 +7,7 @@ module Game exposing
     , advance
     , initialize
     , movePaddle
+    , movePlayerPaddle
     , reset
     )
 
@@ -50,11 +51,12 @@ type alias Game =
     , previousPlayer1 : Position
     , player2 : Position
     , previousPlayer2 : Position
+    , opponent : Player
     }
 
 
-initialize : Ball -> Paddle -> Board -> Game
-initialize ball paddle board =
+initialize : Ball -> Paddle -> Board -> Player -> Game
+initialize ball paddle board opponent =
     let
         player1 =
             initialPlayerPosition 0 paddle board
@@ -71,6 +73,7 @@ initialize ball paddle board =
     , previousPlayer1 = player1
     , player2 = player2
     , previousPlayer2 = player2
+    , opponent = One
     }
 
 
@@ -277,6 +280,16 @@ move path game =
                 | position =
                     newPosition
             }
+
+
+movePlayerPaddle : Float -> Game -> Game
+movePlayerPaddle yDiff game =
+    case game.opponent of
+        One ->
+            movePaddle Two yDiff game
+
+        Two ->
+            movePaddle One yDiff game
 
 
 movePaddle : Player -> Float -> Game -> Game
