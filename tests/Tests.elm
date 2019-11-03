@@ -19,6 +19,7 @@ gameWithFullHeightPaddles =
     , previousPlayer1 = vec2 0.0 0.0
     , player2 = vec2 10.0 0.0
     , previousPlayer2 = vec2 10.0 0.0
+    , opponent = One
     }
 
 

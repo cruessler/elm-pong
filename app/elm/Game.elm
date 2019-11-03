@@ -6,6 +6,7 @@ module Game exposing
     , Position
     , advance
     , initialize
+    , moveOpponent
     , movePaddle
     , movePlayerPaddle
     , reset
@@ -73,7 +74,7 @@ initialize ball paddle board opponent =
     , previousPlayer1 = player1
     , player2 = player2
     , previousPlayer2 = player2
-    , opponent = One
+    , opponent = opponent
     }
 
 
@@ -93,6 +94,7 @@ advance delta game =
         Just velocity ->
             game
                 |> move (V.scale delta velocity)
+                |> moveOpponent game.opponent
 
         Nothing ->
             game
@@ -320,3 +322,34 @@ movePaddle player yDiff game =
                         game.player2
                 , previousPlayer2 = game.player2
             }
+
+
+moveOpponent : Player -> Game -> Game
+moveOpponent player game =
+    let
+        moveBy =
+            2.0
+
+        paddleTop =
+            case player of
+                One ->
+                    getY game.player1
+
+                Two ->
+                    getY game.player2
+
+        paddleBottom =
+            paddleTop
+                + getY game.paddle
+
+        ballY =
+            getY game.position
+    in
+    if ballY < paddleTop then
+        movePaddle player -moveBy game
+
+    else if ballY > paddleBottom then
+        movePaddle player moveBy game
+
+    else
+        game
