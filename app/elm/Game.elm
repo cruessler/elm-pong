@@ -50,8 +50,10 @@ type alias Game =
     , paddle : Paddle
     , player1 : Position
     , previousPlayer1 : Position
+    , player1Score : Int
     , player2 : Position
     , previousPlayer2 : Position
+    , player2Score : Int
     , opponent : Player
     }
 
@@ -72,8 +74,10 @@ initialize ball paddle board opponent =
     , paddle = paddle
     , player1 = player1
     , previousPlayer1 = player1
+    , player1Score = 0
     , player2 = player2
     , previousPlayer2 = player2
+    , player2Score = 0
     , opponent = opponent
     }
 
@@ -141,6 +145,20 @@ resetBall game =
     }
 
 
+score : Player -> Game -> Game
+score player game =
+    case player of
+        One ->
+            { game
+                | player1Score = game.player1Score + 1
+            }
+
+        Two ->
+            { game
+                | player2Score = game.player2Score + 1
+            }
+
+
 accelerate : Float -> Vec2 -> Vec2
 accelerate yDiff path =
     path
@@ -193,6 +211,7 @@ bounceX r path game =
 
                 else
                     resetBall
+                        >> score Two
 
             else if getX newPosition >= getX game.board - halfBallWidth then
                 if hitsPaddle (getY newPosition) game.paddle game.player2 then
@@ -204,6 +223,7 @@ bounceX r path game =
 
                 else
                     resetBall
+                        >> score One
 
             else
                 bounce 0

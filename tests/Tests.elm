@@ -17,8 +17,10 @@ gameWithFullHeightPaddles =
     , paddle = vec2 1.0 10.0
     , player1 = vec2 0.0 0.0
     , previousPlayer1 = vec2 0.0 0.0
+    , player1Score = 0
     , player2 = vec2 10.0 0.0
     , previousPlayer2 = vec2 10.0 0.0
+    , player2Score = 0
     , opponent = One
     }
 
@@ -211,6 +213,8 @@ suite =
                     Expect.all
                         [ .position >> Expect.equal (vec2 5.0 5.0)
                         , .velocity >> Expect.equal Nothing
+                        , .player1Score >> Expect.equal 1
+                        , .player2Score >> Expect.equal 0
                         ]
                         game
             ]

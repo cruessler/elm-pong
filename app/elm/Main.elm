@@ -124,6 +124,19 @@ backendSwitch currentBackend =
         ]
 
 
+scoreboard : Int -> Int -> Html Msg
+scoreboard player1Score player2Score =
+    H.div [ A.id "scoreboard" ]
+        [ H.h1 [] [ H.text "Scores" ]
+        , H.p []
+            [ H.strong [] [ H.text "Your Opponent" ]
+            , H.span [] [ H.text <| String.fromInt player1Score ]
+            , H.strong [] [ H.text "You" ]
+            , H.span [] [ H.text <| String.fromInt player2Score ]
+            ]
+        ]
+
+
 backend : Model -> Html Msg
 backend model =
     case model.backend of
@@ -138,5 +151,8 @@ view : Model -> Html Msg
 view model =
     H.div [ A.id "viewport" ]
         [ backend model
-        , backendSwitch model.backend
+        , H.div [ A.id "bottom-left-overlay" ]
+            [ backendSwitch model.backend
+            , scoreboard model.game.player1Score model.game.player2Score
+            ]
         ]
