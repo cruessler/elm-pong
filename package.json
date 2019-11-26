@@ -17,7 +17,7 @@
     "elm": "^0.19.0-no-deps",
     "elm-test": "^0.19.0-rev6",
     "node-sass": "^4.12.0",
-    "parcel-bundler": "^1.9.7",
+    "parcel-bundler": "^1.10.0",
     "parcel-plugin-elm": "^0.1.4-alpha"
   },
   "dependencies": {
