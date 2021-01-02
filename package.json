@@ -19,7 +19,7 @@
     "elm-format": "^0.8.4",
     "elm-test": "^0.19.1",
     "node-sass": "^5.0.0",
-    "parcel": "^2.0.0-nightly.485",
+    "parcel": "^2.0.0-nightly.500",
     "sass": "^1.32.0"
   },
   "dependencies": {}
