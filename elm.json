@@ -15,7 +15,7 @@
             "elm/svg": "1.0.1",
             "elm/time": "1.0.0",
             "elm-explorations/linear-algebra": "1.0.3",
-            "elm-explorations/webgl": "1.1.2"
+            "elm-explorations/webgl": "1.1.3"
         },
         "indirect": {
             "elm/url": "1.0.0",
