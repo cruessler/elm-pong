@@ -21,6 +21,5 @@
     "node-sass": "^5.0.0",
     "parcel": "^2.0.0-nightly.560",
     "sass": "^1.32.8"
-  },
-  "dependencies": {}
+  }
 }
