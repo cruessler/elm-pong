@@ -1,8 +1,9 @@
 module Game exposing
     ( Ball
     , Game
+    , Opponent(..)
     , Paddle
-    , Player(..)
+    , Player
     , Position
     , advance
     , initialize
@@ -37,7 +38,14 @@ type alias Paddle =
     Vec2
 
 
-type Player
+type alias Player =
+    { position : Position
+    , previousPosition : Position
+    , score : Int
+    }
+
+
+type Opponent
     = One
     | Two
 
@@ -48,24 +56,26 @@ type alias Game =
     , position : Position
     , velocity : Maybe Velocity
     , paddle : Paddle
-    , player1 : Position
-    , previousPlayer1 : Position
-    , player1Score : Int
-    , player2 : Position
-    , previousPlayer2 : Position
-    , player2Score : Int
-    , opponent : Player
+    , player1 : Player
+    , player2 : Player
+    , opponent : Opponent
     }
 
 
-initialize : Ball -> Paddle -> Board -> Player -> Game
+initialize : Ball -> Paddle -> Board -> Opponent -> Game
 initialize ball paddle board opponent =
     let
-        player1 =
+        initialPosition1 =
             initialPlayerPosition 0 paddle board
 
-        player2 =
+        player1 =
+            initialPlayer initialPosition1
+
+        initialPosition2 =
             initialPlayerPosition (getX board + getX paddle) paddle board
+
+        player2 =
+            initialPlayer initialPosition2
     in
     { board = board
     , ball = ball
@@ -73,11 +83,7 @@ initialize ball paddle board opponent =
     , velocity = Just <| vec2 0.0 0.0
     , paddle = paddle
     , player1 = player1
-    , previousPlayer1 = player1
-    , player1Score = 0
     , player2 = player2
-    , previousPlayer2 = player2
-    , player2Score = 0
     , opponent = opponent
     }
 
@@ -90,6 +96,14 @@ initialBallPosition board =
 initialPlayerPosition : Float -> Paddle -> Board -> Position
 initialPlayerPosition x paddle board =
     vec2 x ((getY board - getY paddle) / 2)
+
+
+initialPlayer : Position -> Player
+initialPlayer initialPosition =
+    { position = initialPosition
+    , previousPosition = initialPosition
+    , score = 0
+    }
 
 
 advance : Float -> Game -> Game
@@ -129,11 +143,27 @@ hitsPaddle y paddle position =
 
 reset : Game -> Game
 reset game =
+    let
+        { paddle, board, player1, player2 } =
+            game
+
+        initialPosition1 =
+            initialPlayerPosition 0 paddle board
+
+        initialPosition2 =
+            initialPlayerPosition (getX board + getX paddle) paddle board
+
+        newPlayer1 =
+            { player1 | position = initialPosition1, previousPosition = initialPosition1 }
+
+        newPlayer2 =
+            { player2 | position = initialPosition2, previousPosition = initialPosition2 }
+    in
     { game
         | position = initialBallPosition game.board
         , velocity = Just <| vec2 150.0 0.0
-        , previousPlayer1 = game.player1
-        , previousPlayer2 = game.player2
+        , player1 = newPlayer1
+        , player2 = newPlayer2
     }
 
 
@@ -145,18 +175,19 @@ resetBall game =
     }
 
 
-score : Player -> Game -> Game
-score player game =
-    case player of
+score : Opponent -> Game -> Game
+score opponent game =
+    let
+        addOne : Player -> Player
+        addOne player =
+            { player | score = player.score + 1 }
+    in
+    case opponent of
         One ->
-            { game
-                | player1Score = game.player1Score + 1
-            }
+            { game | player1 = addOne game.player1 }
 
         Two ->
-            { game
-                | player2Score = game.player2Score + 1
-            }
+            { game | player2 = addOne game.player2 }
 
 
 accelerate : Float -> Vec2 -> Vec2
@@ -176,9 +207,6 @@ bounceX r path game =
 
         halfBallWidth =
             getX game.ball / 2
-
-        halfBallHeight =
-            getY game.ball / 2
 
         bounce : Float -> Game -> Game
         bounce yDiff game_ =
@@ -201,29 +229,25 @@ bounceX r path game =
             getY previousPosition - getY position
 
         f =
-            if getX newPosition <= halfBallWidth then
-                if hitsPaddle (getY newPosition) game.paddle game.player1 then
-                    bounce
-                        (deflectBy
-                            game.previousPlayer1
-                            game.player1
-                        )
+            let
+                hitOrScore : Player -> Opponent -> (Game -> Game)
+                hitOrScore player opponent =
+                    if hitsPaddle (getY newPosition) game.paddle player.position then
+                        bounce
+                            (deflectBy
+                                player.previousPosition
+                                player.position
+                            )
 
-                else
-                    resetBall
-                        >> score Two
+                    else
+                        resetBall
+                            >> score opponent
+            in
+            if getX newPosition <= halfBallWidth then
+                hitOrScore game.player1 Two
 
             else if getX newPosition >= getX game.board - halfBallWidth then
-                if hitsPaddle (getY newPosition) game.paddle game.player2 then
-                    bounce
-                        (deflectBy
-                            game.previousPlayer2
-                            game.player2
-                        )
-
-                else
-                    resetBall
-                        >> score One
+                hitOrScore game.player2 One
 
             else
                 bounce 0
@@ -314,49 +338,44 @@ movePlayerPaddle yDiff game =
             movePaddle One yDiff game
 
 
-movePaddle : Player -> Float -> Game -> Game
-movePaddle player yDiff game =
-    case player of
-        One ->
-            { game
-                | player1 =
+movePaddle : Opponent -> Float -> Game -> Game
+movePaddle opponent yDiff game =
+    let
+        movePaddle_ : Player -> Player
+        movePaddle_ player =
+            { player
+                | position =
                     setY
                         (clamp
                             0
                             (getY game.board - getY game.paddle)
-                            (getY game.player1 + yDiff)
+                            (getY player.position + yDiff)
                         )
-                        game.player1
-                , previousPlayer1 = game.player1
+                        player.position
+                , previousPosition = player.position
             }
+    in
+    case opponent of
+        One ->
+            { game | player1 = movePaddle_ game.player1 }
 
         Two ->
-            { game
-                | player2 =
-                    setY
-                        (clamp
-                            0
-                            (getY game.board - getY game.paddle)
-                            (getY game.player2 + yDiff)
-                        )
-                        game.player2
-                , previousPlayer2 = game.player2
-            }
+            { game | player2 = movePaddle_ game.player2 }
 
 
-moveOpponent : Player -> Game -> Game
-moveOpponent player game =
+moveOpponent : Opponent -> Game -> Game
+moveOpponent opponent game =
     let
         moveBy =
             2.0
 
         paddleTop =
-            case player of
+            case opponent of
                 One ->
-                    getY game.player1
+                    getY game.player1.position
 
                 Two ->
-                    getY game.player2
+                    getY game.player2.position
 
         paddleBottom =
             paddleTop
@@ -366,10 +385,10 @@ moveOpponent player game =
             getY game.position
     in
     if ballY < paddleTop then
-        movePaddle player -moveBy game
+        movePaddle opponent -moveBy game
 
     else if ballY > paddleBottom then
-        movePaddle player moveBy game
+        movePaddle opponent moveBy game
 
     else
         game

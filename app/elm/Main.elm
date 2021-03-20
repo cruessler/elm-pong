@@ -4,7 +4,7 @@ import Backend.Svg
 import Backend.WebGL
 import Browser
 import Browser.Events as Events
-import Game exposing (Player(..))
+import Game exposing (Opponent(..))
 import Html as H exposing (Html)
 import Html.Attributes as A
 import Html.Events as E
@@ -12,10 +12,9 @@ import Json.Decode as D
 import Math.Vector2 exposing (vec2)
 import Model as M exposing (Backend(..), Model, Position)
 import Msg exposing (Msg(..))
-import Task
-import Time
 
 
+main : Program () Model Msg
 main =
     Browser.element
         { init = init
@@ -153,6 +152,6 @@ view model =
         [ backend model
         , H.div [ A.id "bottom-left-overlay" ]
             [ backendSwitch model.backend
-            , scoreboard model.game.player1Score model.game.player2Score
+            , scoreboard model.game.player1.score model.game.player2.score
             ]
         ]

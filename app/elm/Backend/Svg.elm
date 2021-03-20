@@ -48,6 +48,6 @@ view model =
         , E.onClick MouseClick
         ]
         [ ball model.game
-        , paddle model.game.paddle model.game.player1
-        , paddle model.game.paddle model.game.player2
+        , paddle model.game.paddle model.game.player1.position
+        , paddle model.game.paddle model.game.player2.position
         ]

@@ -1,7 +1,7 @@
 module Backend.WebGL.Cube exposing (entity)
 
 import Math.Matrix4 exposing (Mat4)
-import Math.Vector3 as Vector3 exposing (Vec3, add, vec3)
+import Math.Vector3 as Vector3 exposing (Vec3, vec3)
 import WebGL exposing (Entity, Mesh, Shader)
 
 
