@@ -2,16 +2,15 @@ module Backend.WebGL exposing (view)
 
 import Backend.WebGL.Ball as Ball
 import Backend.WebGL.Cube as Cube
-import Game exposing (Position)
-import Html as H exposing (Html)
+import Html exposing (Html)
 import Html.Attributes as A
 import Html.Events as E
 import Math.Matrix4 as Matrix4 exposing (Mat4)
 import Math.Vector2 as Vector2 exposing (Vec2, vec2)
-import Math.Vector3 exposing (Vec3, getX, getY, getZ, setX, setY, setZ, vec3)
+import Math.Vector3 exposing (Vec3, getX, getY, setZ, vec3)
 import Model exposing (Model)
 import Msg exposing (Msg(..))
-import WebGL exposing (Entity, Shader)
+import WebGL
 
 
 makePerspective : Float -> Float -> Mat4
@@ -59,10 +58,10 @@ view model =
                 |> setZ (Vector2.getX model.game.ball / 2)
 
         paddle1 =
-            setZ 0 model.game.player1
+            setZ 0 model.game.player1.position
 
         paddle2 =
-            setZ 0 model.game.player2
+            setZ 0 model.game.player2.position
 
         paddleHeight =
             Vector2.getX model.game.paddle

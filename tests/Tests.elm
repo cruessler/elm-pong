@@ -1,11 +1,26 @@
 module Tests exposing (..)
 
-import Expect exposing (Expectation, FloatingPointTolerance(..))
-import Fuzz exposing (Fuzzer, floatRange, int, list, string)
-import Game exposing (Game, Player(..))
-import Math.Vector2 as V exposing (Vec2, getX, getY, vec2)
-import Test exposing (..)
-import Time
+import Expect exposing (FloatingPointTolerance(..))
+import Fuzz exposing (floatRange)
+import Game exposing (Game, Opponent(..), Player)
+import Math.Vector2 as V exposing (getX, getY, vec2)
+import Test exposing (Test, describe, fuzz2, test)
+
+
+player1 : Player
+player1 =
+    { position = vec2 0.0 0.0
+    , previousPosition = vec2 0.0 0.0
+    , score = 0
+    }
+
+
+player2 : Player
+player2 =
+    { position = vec2 10.0 0.0
+    , previousPosition = vec2 10.0 0.0
+    , score = 0
+    }
 
 
 gameWithFullHeightPaddles : Game
@@ -15,12 +30,8 @@ gameWithFullHeightPaddles =
     , position = vec2 5.0 5.0
     , velocity = Just <| vec2 1.0 0.0
     , paddle = vec2 1.0 10.0
-    , player1 = vec2 0.0 0.0
-    , previousPlayer1 = vec2 0.0 0.0
-    , player1Score = 0
-    , player2 = vec2 10.0 0.0
-    , previousPlayer2 = vec2 10.0 0.0
-    , player2Score = 0
+    , player1 = player1
+    , player2 = player2
     , opponent = One
     }
 
@@ -213,8 +224,8 @@ suite =
                     Expect.all
                         [ .position >> Expect.equal (vec2 5.0 5.0)
                         , .velocity >> Expect.equal Nothing
-                        , .player1Score >> Expect.equal 1
-                        , .player2Score >> Expect.equal 0
+                        , .player1 >> .score >> Expect.equal 1
+                        , .player2 >> .score >> Expect.equal 0
                         ]
                         game
             ]
@@ -230,8 +241,8 @@ suite =
                                 |> Game.movePaddle Two -5.0
                     in
                     Expect.all
-                        [ .player1 >> V.toRecord >> Expect.equal { x = 0.0, y = 0.0 }
-                        , .player2 >> V.toRecord >> Expect.equal { x = 10.0, y = 0.0 }
+                        [ .player1 >> .position >> V.toRecord >> Expect.equal { x = 0.0, y = 0.0 }
+                        , .player2 >> .position >> V.toRecord >> Expect.equal { x = 10.0, y = 0.0 }
                         ]
                         game
             , test "doesn’t leave the board with 0-height paddle" <|
@@ -245,8 +256,8 @@ suite =
                                 |> Game.movePaddle Two -6.0
                     in
                     Expect.all
-                        [ .player1 >> V.toRecord >> Expect.equal { x = 0.0, y = 2.0 }
-                        , .player2 >> V.toRecord >> Expect.equal { x = 10.0, y = 4.0 }
+                        [ .player1 >> .position >> V.toRecord >> Expect.equal { x = 0.0, y = 2.0 }
+                        , .player2 >> .position >> V.toRecord >> Expect.equal { x = 10.0, y = 4.0 }
                         ]
                         game
             ]

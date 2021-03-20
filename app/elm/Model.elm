@@ -12,11 +12,13 @@ module Model exposing
     , width
     )
 
-import Game exposing (Game, Paddle, Player(..))
+import Game exposing (Game, Opponent(..))
 
 
 type alias Position =
-    { x : Int, y : Int }
+    { x : Int
+    , y : Int
+    }
 
 
 type Backend
