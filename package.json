@@ -21,7 +21,7 @@
     "elm-format": "^0.8.5",
     "elm-test": "^0.19.1",
     "node-sass": "^5.0.0",
-    "parcel": "^2.0.0-nightly.627",
+    "parcel": "^2.0.0-nightly.649",
     "sass": "^1.32.8"
   }
 }
